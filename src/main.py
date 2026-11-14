@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config_loader import ConfigError, load_config
 from repo_apt import RepoError, load_repo_url
+from repo_test import TestRepoError, load_test_repo
+from graph import GraphError, build_graph
 
 
 def print_config(cfg) -> None:
@@ -18,27 +20,25 @@ def print_config(cfg) -> None:
     print(f"  ascii_tree : {cfg.ascii_tree}")
 
 
-def print_direct_deps(cfg) -> int:
-    """Скачивает репозиторий и выводит прямые зависимости."""
-    try:
-        repo = load_repo_url(cfg.repo)
-    except RepoError as err:
-        print(f"[ОШИБКА РЕПОЗИТОРИЯ] {err}", file=sys.stderr)
-        return 3
+def load_repo(cfg):
+    """Загружает данные (URL или тестовый файл)."""
+    if cfg.repo_mode == "url":
+        return load_repo_url(cfg.repo)
+    return load_test_repo(cfg.repo)
 
-    direct = repo.get(cfg.package)
-    if direct is None:
-        msg = f"Пакет '{cfg.package}' не найден в индексе"
-        print(f"[ОШИБКА] {msg}", file=sys.stderr)
-        return 3
 
-    print(f"\nПрямые зависимости '{cfg.package}':")
-    if not direct:
-        print("  (нет)")
+def print_graph_summary(edges, nodes, cycles) -> None:
+    """Выводит статистику по графу и найденные циклы."""
+    total_edges = sum(len(v) for v in edges.values())
+    print(f"\nУзлов в графе: {len(nodes)}")
+    print(f"Рёбер в графе: {total_edges}")
+
+    if cycles:
+        print(f"Обнаружены циклы ({len(cycles)}):")
+        for a, b in cycles:
+            print(f"  {a} -> {b} (цикл)")
     else:
-        for dep in direct:
-            print(f"  - {dep}")
-    return 0
+        print("Циклов не обнаружено")
 
 
 def main(argv: list[str]) -> int:
@@ -53,10 +53,19 @@ def main(argv: list[str]) -> int:
 
     print_config(cfg)
 
-    if cfg.repo_mode == "url":
-        return print_direct_deps(cfg)
+    try:
+        repo = load_repo(cfg)
+    except (RepoError, TestRepoError) as err:
+        print(f"[ОШИБКА РЕПОЗИТОРИЯ] {err}", file=sys.stderr)
+        return 3
 
-    print("[ИНФО] Режим test будет добавлен на этапе 3", file=sys.stderr)
+    try:
+        edges, nodes, cycles = build_graph(repo, cfg.package)
+    except GraphError as err:
+        print(f"[ОШИБКА ГРАФА] {err}", file=sys.stderr)
+        return 4
+
+    print_graph_summary(edges, nodes, cycles)
     return 0
 
 
