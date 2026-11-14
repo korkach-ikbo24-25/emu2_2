@@ -8,6 +8,7 @@ from config_loader import ConfigError, load_config
 from repo_apt import RepoError, load_repo_url
 from repo_test import TestRepoError, load_test_repo
 from graph import GraphError, build_graph
+from ordering import load_order
 
 
 def print_config(cfg) -> None:
@@ -41,6 +42,14 @@ def print_graph_summary(edges, nodes, cycles) -> None:
         print("Циклов не обнаружено")
 
 
+def print_load_order(repo, package) -> None:
+    """Выводит порядок установки пакетов."""
+    seq, _ = load_order(repo, package)
+    print("\nПорядок загрузки (зависимости раньше пакета):")
+    for i, pkg in enumerate(seq, 1):
+        print(f"  {i:>2}. {pkg}")
+
+
 def main(argv: list[str]) -> int:
     """Главная функция программы."""
     path = argv[1] if len(argv) > 1 else "data/config.csv"
@@ -66,6 +75,8 @@ def main(argv: list[str]) -> int:
         return 4
 
     print_graph_summary(edges, nodes, cycles)
+    print_load_order(repo, cfg.package)
+    
     return 0
 
 
