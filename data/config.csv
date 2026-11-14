@@ -1,6 +1,6 @@
 key;value
-package;A
-repo;data/test_repos/cycle.txt
-repo_mode;test
-output;cycle.svg
+package;hello
+repo;https://archive.ubuntu.com/ubuntu/dists/jammy/main/binary-amd64/Packages.gz
+repo_mode;url
+output;hello.svg
 ascii_tree;true

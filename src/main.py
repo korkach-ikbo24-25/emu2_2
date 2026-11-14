@@ -9,6 +9,7 @@ from repo_apt import RepoError, load_repo_url
 from repo_test import TestRepoError, load_test_repo
 from graph import GraphError, build_graph
 from ordering import load_order
+from visualize import VisualizeError, ascii_tree, render_svg, to_dot
 
 
 def print_config(cfg) -> None:
@@ -76,7 +77,19 @@ def main(argv: list[str]) -> int:
 
     print_graph_summary(edges, nodes, cycles)
     print_load_order(repo, cfg.package)
-    
+
+    '''Визуализация (Этап 5'''
+    dot = to_dot(edges, cycles, cfg.package)
+    try:
+        render_svg(dot, cfg.output)
+        print(f"\nSVG сохранён: {cfg.output}")
+    except VisualizeError as err:
+        print(f"[ОШИБКА ВИЗУАЛИЗАЦИИ] {err}", file=sys.stderr)
+
+    if cfg.ascii_tree:
+        print("\nASCII-дерево зависимостей:")
+        print(ascii_tree(edges, cfg.package))
+
     return 0
 
 
