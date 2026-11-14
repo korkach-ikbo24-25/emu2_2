@@ -2,10 +2,10 @@
 import sys
 import os
 
-# Добавляем папку src в путь, чтобы импорты работали
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config_loader import ConfigError, load_config
+from repo_apt import RepoError, load_repo_url
 
 
 def print_config(cfg) -> None:
@@ -16,6 +16,29 @@ def print_config(cfg) -> None:
     print(f"  repo_mode  : {cfg.repo_mode}")
     print(f"  output     : {cfg.output}")
     print(f"  ascii_tree : {cfg.ascii_tree}")
+
+
+def print_direct_deps(cfg) -> int:
+    """Скачивает репозиторий и выводит прямые зависимости."""
+    try:
+        repo = load_repo_url(cfg.repo)
+    except RepoError as err:
+        print(f"[ОШИБКА РЕПОЗИТОРИЯ] {err}", file=sys.stderr)
+        return 3
+
+    direct = repo.get(cfg.package)
+    if direct is None:
+        msg = f"Пакет '{cfg.package}' не найден в индексе"
+        print(f"[ОШИБКА] {msg}", file=sys.stderr)
+        return 3
+
+    print(f"\nПрямые зависимости '{cfg.package}':")
+    if not direct:
+        print("  (нет)")
+    else:
+        for dep in direct:
+            print(f"  - {dep}")
+    return 0
 
 
 def main(argv: list[str]) -> int:
@@ -29,6 +52,11 @@ def main(argv: list[str]) -> int:
         return 2
 
     print_config(cfg)
+
+    if cfg.repo_mode == "url":
+        return print_direct_deps(cfg)
+
+    print("[ИНФО] Режим test будет добавлен на этапе 3", file=sys.stderr)
     return 0
 
 
