@@ -9,7 +9,7 @@ def load_order(
     if root not in repo:
         raise ValueError(f"Пакет '{root}' отсутствует в репозитории")
 
-    """Цвета: 0 - не посещен, 1 - в процессе, 2 - обработан"""
+    """Цвета: 0 - не посещен, 1 - в процессе, 2 - обработан."""
     color: Dict[str, int] = {}
     order: List[str] = []
     cycles: List[Tuple[str, str]] = []
@@ -22,7 +22,7 @@ def load_order(
         try:
             nxt = next(it)
         except StopIteration:
-            """Пост-обход: добавляем узел в порядок только после всех детей"""
+            """Пост-обход: добавляем узел в порядок только после всех детей."""
             color[node] = 2
             order.append(node)
             stack.pop()
