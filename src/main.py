@@ -78,7 +78,6 @@ def main(argv: list[str]) -> int:
     print_graph_summary(edges, nodes, cycles)
     print_load_order(repo, cfg.package)
 
-    '''Визуализация (Этап 5'''
     dot = to_dot(edges, cycles, cfg.package)
     try:
         render_svg(dot, cfg.output)
